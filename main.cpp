@@ -3,7 +3,10 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 
-int read_path(int argc, char **argv) {
+const std::string scale =
+    "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.";
+
+int read_path(int argc, const char **argv) {
   if (argc < 2) {
     std::cerr << "Please provide an image path\n";
     return -1;
@@ -15,19 +18,26 @@ int read_path(int argc, char **argv) {
   return 0;
 }
 
-int read_image(std::string image_path) { return -1; }
+int read_image(const std::string image_path) {
 
-int main(int argc, char **argv) {
-  if (read_path(argc, argv) < 0)
-    return -1;
-  cv::Mat img = cv::imread(argv[1], cv::IMREAD_COLOR);
+  cv::Mat img = cv::imread(image_path, cv::IMREAD_COLOR);
 
   if (img.empty()) {
     std::cerr << "Error: Unable to read image..." << std::endl;
-    return 1;
+    return -1;
   }
 
-  cv::imshow("Display window", img);
-  int k = cv::waitKey(0); // Wait for a keystroke in the window
+  return 0;
+}
+
+int main(int argc, const char **argv) {
+  std::cout << scale << "\n";
+  if (read_path(argc, argv) < 0) {
+    return -1;
+  }
+
+  if (read_image(argv[1]) < 0) {
+    return -1;
+  }
   return 0;
 }
