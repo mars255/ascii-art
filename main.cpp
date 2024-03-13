@@ -17,23 +17,54 @@ const std::string scale =
 struct charImage {
   std::vector<std::vector<char>> pixels;
 };
+void print_usage(const char *program_name) {
+  std::cerr << "Usage: " << program_name << " path [-w width] [-h height]\n";
+  std::cerr << "If only width or height are provided, the original aspect "
+               "ratio will be preserved\n";
+}
 
 int read_path(int argc, const char **argv) {
   if (argc < 2) {
-    std::cerr << "Please provide an image path\n";
+    print_usage(argv[0]);
     return -1;
   }
-  if (!std::filesystem::exists(argv[1])) {
+
+  std::string path = argv[1];
+
+  if (!std::filesystem::exists(path)) {
     std::cerr << "Invalid path!\n";
     return -1;
+  }
+
+  int width = -1;
+  int height = -1;
+
+  for (int i = 2; i < argc; ++i) {
+    if (std::string(argv[i]) == "-w") {
+      if (i + 1 < argc) {
+        width = std::stoi(argv[i + 1]);
+        ++i;
+      } else {
+        std::cerr << "Width value missing after -w\n";
+        return -1;
+      }
+    } else if (std::string(argv[i]) == "-h") {
+      if (i + 1 < argc) {
+        height = std::stoi(argv[i + 1]);
+        ++i;
+      } else {
+        std::cerr << "Height value missing after -h\n";
+        return -1;
+      }
+    } else {
+      std::cerr << "Unknown option: " << argv[i] << std::endl;
+      return -1;
+    }
   }
   return 0;
 }
 
 int process_pixels(cv::Mat image) {
-  charImage new_im;
-  imwrite("output.jpg", image);
-
   for (int y = 1; y < image.rows - 1; ++y) {
     for (int x = 1; x < image.cols - 1; ++x) {
       std::cout << scale[std::floor(64 * image.at<uint8_t>(y, x) / 255)];
@@ -43,10 +74,8 @@ int process_pixels(cv::Mat image) {
   std::cout << image.rows << "\n" << image.cols << std::endl;
   return 0;
 }
-cv::Mat change_size(int x, int y, cv::Mat &im) {
-  cv::Mat result;
-  cv::resize(im, result, cv::Size(x, y), 0, 0, cv::INTER_LINEAR);
-  return result;
+void change_size(int height, int width, cv::Mat &im) {
+  cv::resize(im, im, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
 }
 
 int read_image(const std::string image_path) {
@@ -57,7 +86,13 @@ int read_image(const std::string image_path) {
     std::cerr << "Error: Unable to read image..." << std::endl;
     return -1;
   }
-  process_pixels(change_size(100, 100, img));
+  int width = img.size().width;
+  int height = img.size().height;
+  double ratio = static_cast<double>(width) / static_cast<double>(height);
+  std::cout << ratio << std::endl;
+
+  change_size(200, std::floor(ratio * 200), img);
+  process_pixels(img);
 
   return 0;
 }
